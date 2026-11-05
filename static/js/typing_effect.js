@@ -8,9 +8,11 @@ const typingPhrases = [
 let phraseIdx = 0;
 let charIdx = 0;
 let isDeleting = false;
-const typingElement = document.getElementById("typing-element");
 
 function typeEffect() {
+  const typingElement = document.getElementById("typing-element");
+  if (!typingElement) return;
+
   const currentPhrase = typingPhrases[phraseIdx];
 
   if (isDeleting) {
@@ -34,4 +36,9 @@ function typeEffect() {
 
   setTimeout(typeEffect, speed);
 }
-document.addEventListener("DOMContentLoaded", typeEffect);
+
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", typeEffect);
+} else {
+  typeEffect();
+}
