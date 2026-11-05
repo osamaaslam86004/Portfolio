@@ -1074,105 +1074,160 @@ img {
 }
 ```
 
+## File: vercel.json
+```json
+{
+        "version": 2,
+        "builds": [
+            {
+                "src": "index.html",
+                "use": "@vercel/static"
+            }
+        ],
+        "routes": [
+            {
+                "src": "/(.*)",
+                "dest": "/index.html"
+            }
+        ]
+    }
+```
+
 ## File: static/js/animation.js
 ```javascript
-// 4. PROJECT GALLERY FILTERING
-const filterBtns = document.querySelectorAll(".filter-btn");
-const projectCards = document.querySelectorAll(".project-card");
+document.addEventListener("DOMContentLoaded", () => {
+  // 4. PROJECT GALLERY FILTERING
+  const filterBtns = document.querySelectorAll(".filter-btn");
+  const projectCards = document.querySelectorAll(".project-card");
 
-filterBtns.forEach((btn) => {
-  btn.addEventListener("click", () => {
-    filterBtns.forEach((b) => b.classList.remove("active"));
-    btn.classList.add("active");
+  filterBtns.forEach((btn) => {
+    btn.addEventListener("click", () => {
+      filterBtns.forEach((b) => b.classList.remove("active"));
+      btn.classList.add("active");
 
-    const filter = btn.getAttribute("data-filter");
-    projectCards.forEach((card) => {
-      if (filter === "all" || card.getAttribute("data-category") === filter) {
-        card.style.display = "flex";
-      } else {
-        card.style.display = "none";
+      const filter = btn.getAttribute("data-filter");
+      projectCards.forEach((card) => {
+        if (filter === "all" || card.getAttribute("data-category") === filter) {
+          card.style.display = "flex";
+        } else {
+          card.style.display = "none";
+        }
+      });
+    });
+  });
+
+  // 5. MODAL CONTROL (Exposed globally for inline onclick handlers)
+  window.openModal = function (id) {
+    const modal = document.getElementById(id);
+    if (modal) modal.classList.add("active");
+  };
+
+  window.closeModal = function (id) {
+    const modal = document.getElementById(id);
+    if (modal) modal.classList.remove("active");
+  };
+
+  // Close modal on overlay click
+  document.querySelectorAll(".modal-overlay").forEach((overlay) => {
+    overlay.addEventListener("click", (e) => {
+      if (e.target === overlay) {
+        overlay.classList.remove("active");
       }
     });
   });
-});
 
-// 5. MODAL CONTROL
-function openModal(id) {
-  document.getElementById(id).classList.add("active");
-}
-function closeModal(id) {
-  document.getElementById(id).classList.remove("active");
-}
+  // 6. MOBILE NAVIGATION TOGGLE
+  const mobileBtn = document.getElementById("mobile-menu-toggle");
+  const navMenu = document.getElementById("nav-menu");
+  if (mobileBtn && navMenu) {
+    mobileBtn.addEventListener("click", () => {
+      navMenu.classList.toggle("active");
+    });
 
-// Close modal on overlay click
-document.querySelectorAll(".modal-overlay").forEach((overlay) => {
-  overlay.addEventListener("click", (e) => {
-    if (e.target === overlay) {
-      overlay.classList.remove("active");
-    }
-  });
-});
-
-// 6. MOBILE NAVIGATION TOGGLE
-const mobileBtn = document.getElementById("mobile-menu-toggle");
-const navMenu = document.getElementById("nav-menu");
-mobileBtn.addEventListener("click", () => {
-  navMenu.classList.toggle("active");
+    // Close menu when clicking nav links on mobile
+    navMenu.querySelectorAll(".nav-link").forEach((link) => {
+      link.addEventListener("click", () => {
+        navMenu.classList.remove("active");
+      });
+    });
+  }
 });
 ```
 
 ## File: static/js/contact_form.js
 ```javascript
 // 7. CONTACT FORM SIMULATION
-function handleContactSubmit(event) {
+window.handleContactSubmit = function (event) {
   event.preventDefault();
   const responseDiv = document.getElementById("form-response");
+  if (!responseDiv) return;
   responseDiv.style.color = "var(--accent-secondary)";
   responseDiv.textContent =
     "Thank you! Your message has been sent successfully.";
-  document.getElementById("contactForm").reset();
-}
+  const contactForm = document.getElementById("contactForm");
+  if (contactForm) contactForm.reset();
+};
 ```
 
 ## File: static/js/counter_animation.js
 ```javascript
 // 3. INTERACTIVE COUNTER ANIMATION (INTERSECTION OBSERVER)
-const metricNumbers = document.querySelectorAll(".metric-number");
-const observerOptions = { threshold: 0.5 };
+document.addEventListener("DOMContentLoaded", () => {
+  const metricNumbers = document.querySelectorAll(".metric-number");
+  if (metricNumbers.length === 0) return;
 
-const observer = new IntersectionObserver((entries, observer) => {
-  entries.forEach((entry) => {
-    if (entry.isIntersecting) {
-      const target = parseFloat(entry.target.getAttribute("data-target"));
-      let current = 0;
-      const increment = target / 50;
-      const timer = setInterval(() => {
-        current += increment;
-        if (current >= target) {
-          entry.target.textContent =
-            target % 1 === 0 ? target : target.toFixed(1);
-          clearInterval(timer);
-        } else {
-          entry.target.textContent =
-            current % 1 === 0 ? Math.floor(current) : current.toFixed(1);
-        }
-      }, 30);
-      observer.unobserve(entry.target);
-    }
-  });
-}, observerOptions);
+  const observerOptions = { threshold: 0.5 };
 
-metricNumbers.forEach((num) => observer.observe(num));
+  const observer = new IntersectionObserver((entries, observer) => {
+    entries.forEach((entry) => {
+      if (entry.isIntersecting) {
+        const target = parseFloat(entry.target.getAttribute("data-target"));
+        const isInteger = Number.isInteger(target);
+        let current = 0;
+        const steps = 50;
+        const increment = target / steps;
+
+        const timer = setInterval(() => {
+          current += increment;
+          if (current >= target) {
+            entry.target.textContent = isInteger ? target : target.toFixed(1);
+            clearInterval(timer);
+          } else {
+            entry.target.textContent = isInteger
+              ? Math.floor(current)
+              : current.toFixed(1);
+          }
+        }, 30);
+
+        observer.unobserve(entry.target);
+      }
+    });
+  }, observerOptions);
+
+  metricNumbers.forEach((num) => observer.observe(num));
+});
 ```
 
 ## File: static/js/toggle_theme.js
 ```javascript
 // 2. THEME TOGGLE (DARK / LIGHT MODE)
-const themeToggleBtn = document.getElementById("theme-toggle");
-themeToggleBtn.addEventListener("click", () => {
-  const currentTheme = document.documentElement.getAttribute("data-theme");
-  const newTheme = currentTheme === "dark" ? "light" : "dark";
-  document.documentElement.setAttribute("data-theme", newTheme);
+document.addEventListener("DOMContentLoaded", () => {
+  const themeToggleBtn = document.getElementById("theme-toggle");
+  if (!themeToggleBtn) return;
+
+  // Restore saved theme preference
+  const savedTheme = localStorage.getItem("theme");
+  if (savedTheme) {
+    document.documentElement.setAttribute("data-theme", savedTheme);
+  }
+
+  themeToggleBtn.addEventListener("click", () => {
+    const currentTheme =
+      document.documentElement.getAttribute("data-theme") || "dark";
+    const newTheme = currentTheme === "dark" ? "light" : "dark";
+    document.documentElement.setAttribute("data-theme", newTheme);
+    localStorage.setItem("theme", newTheme);
+  });
 });
 ```
 
@@ -1188,9 +1243,11 @@ const typingPhrases = [
 let phraseIdx = 0;
 let charIdx = 0;
 let isDeleting = false;
-const typingElement = document.getElementById("typing-element");
 
 function typeEffect() {
+  const typingElement = document.getElementById("typing-element");
+  if (!typingElement) return;
+
   const currentPhrase = typingPhrases[phraseIdx];
 
   if (isDeleting) {
@@ -1214,26 +1271,12 @@ function typeEffect() {
 
   setTimeout(typeEffect, speed);
 }
-document.addEventListener("DOMContentLoaded", typeEffect);
-```
 
-## File: vercel.json
-```json
-{
-        "version": 2,
-        "builds": [
-            {
-                "src": "index.html",
-                "use": "@vercel/static"
-            }
-        ],
-        "routes": [
-            {
-                "src": "/(.*)",
-                "dest": "/index.html"
-            }
-        ]
-    }
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", typeEffect);
+} else {
+  typeEffect();
+}
 ```
 
 ## File: index.html
@@ -2575,11 +2618,11 @@ document.addEventListener("DOMContentLoaded", typeEffect);
     <!-- ==========================================================================
        VANILLA JAVASCRIPT
        ========================================================================== -->
-    <script href="static/js/animation.js"></script>
-    <script href="static/js/typing_effect.js"></script>
-    <script href="static/js/toggle_theme.js"></script>
-    <script href="static/js/counter_animation.js"></script>
-    <script href="static/js/contact_form.js"></script>
+    <script src="static/js/animation.js"></script>
+    <script src="static/js/typing_effect.js"></script>
+    <script src="static/js/toggle_theme.js"></script>
+    <script src="static/js/counter_animation.js"></script>
+    <script src="static/js/contact_form.js"></script>
   </body>
 </html>
 ```
